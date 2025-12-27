@@ -24,7 +24,14 @@ def after_request(response):
     return response
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(basedir, "instance", "wave.db")}'
+
+instance_path = os.path.join(basedir, "instance")
+os.makedirs(instance_path, exist_ok=True)  # ✅ ensure folder exists
+
+db_path = os.path.join(instance_path, "wave.db")
+
+app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{db_path}"
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'wave-secret-key-for-dev-only'
 
