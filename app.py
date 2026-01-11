@@ -90,6 +90,15 @@ def token_required(f):
         return f(current_user_id, *args, **kwargs)
     return decorated
 
+def admin_required(f):
+    @wraps(f)
+    def decorated(current_user_id, *args, **kwargs):
+        user = User.query.get(current_user_id)
+        if not user or not user.is_admin:
+            return jsonify({"error": "Admin only"}), 403
+        return f(current_user_id, *args, **kwargs)
+    return decorated
+
 @app.route('/')
 def hello():
     return "Wave Backend is live! ✅"
@@ -119,7 +128,8 @@ def register():
         username=data['username'],
         email=data['email'],
         role=data['role'],
-        work_platform=data.get('work_platform')
+        work_platform=data.get('work_platform'),
+        is_admin=data['email'] == "wavecommunnity@gmail.com"
     )
     new_user.set_password(data['password'])
     db.session.add(new_user)
@@ -194,10 +204,26 @@ def create_task(current_user_id):
     db.session.commit()
     return jsonify(new_task.to_dict()), 201
 
-@app.route('/api/tasks', methods=['GET'])
-def get_tasks():
+
+
+
+
     tasks = Task.query.filter_by(status='open').all()
     return jsonify([task.to_dict() for task in tasks]), 200
+
+@app.route('/api/admin/users', methods=['GET'])
+@token_required
+@admin_required
+def admin_users(current_user_id):
+    users = User.query.all()
+    return jsonify([u.to_dict() for u in users])
+
+@app.route('/api/admin/tasks', methods=['GET'])
+@token_required
+@admin_required
+def admin_tasks(current_user_id):
+    tasks = Task.query.all()
+    return jsonify([t.to_dict() for t in tasks])
 
 @app.route('/profile/location', methods=['PUT'])
 @token_required

@@ -18,6 +18,7 @@ class User(db.Model):
     latitude = db.Column(db.Float, nullable=True)
     longitude = db.Column(db.Float, nullable=True)
     work_platform = db.Column(db.String(50))
+    is_admin = db.Column(db.Boolean, default=False)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -37,6 +38,7 @@ class User(db.Model):
             "latitude": self.latitude,
             "longitude": self.longitude,
             "work_platform": self.work_platform,
+            "is_admin": self.is_admin,
         }
 
 class Rating(db.Model):
