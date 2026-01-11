@@ -94,8 +94,9 @@ def admin_required(f):
     @wraps(f)
     def decorated(current_user_id, *args, **kwargs):
         user = User.query.get(current_user_id)
-        if not user or not user.is_admin:
-            return jsonify({"error": "Admin only"}), 403
+        # Only allow access for the configured admin email
+        if not user or user.email.lower() != "wavecommunnity@gmail.com":
+            return jsonify({"error": "Admin access only"}), 403
         return f(current_user_id, *args, **kwargs)
     return decorated
 
@@ -224,6 +225,43 @@ def admin_users(current_user_id):
 def admin_tasks(current_user_id):
     tasks = Task.query.all()
     return jsonify([t.to_dict() for t in tasks])
+
+
+@app.route('/api/admin/quotes', methods=['GET'])
+@token_required
+@admin_required
+def admin_quotes(current_user_id):
+    quotes = Quote.query.all()
+    return jsonify([q.to_dict() for q in quotes]), 200
+
+
+@app.route('/api/admin/ratings', methods=['GET'])
+@token_required
+@admin_required
+def admin_ratings(current_user_id):
+    ratings = Rating.query.all()
+    return jsonify([r.to_dict() for r in ratings]), 200
+
+
+@app.route('/api/admin/stats', methods=['GET'])
+@token_required
+@admin_required
+def admin_stats(current_user_id):
+    users_count = User.query.count()
+    tasks_count = Task.query.count()
+    completed_tasks = Task.query.filter_by(status='completed').count()
+    open_tasks = Task.query.filter_by(status='open').count()
+    quotes_count = Quote.query.count()
+    ratings_count = Rating.query.count()
+
+    return jsonify({
+        "users_count": users_count,
+        "tasks_count": tasks_count,
+        "completed_tasks": completed_tasks,
+        "open_tasks": open_tasks,
+        "quotes_count": quotes_count,
+        "ratings_count": ratings_count
+    }), 200
 
 @app.route('/profile/location', methods=['PUT'])
 @token_required
